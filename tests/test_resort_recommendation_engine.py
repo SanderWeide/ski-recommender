@@ -9,6 +9,10 @@ from src.models import (
 from src.recommendation.resort_engine import ResortRecommendationEngine
 
 
+# Fixed date for deterministic tests
+TEST_DATE = datetime(2024, 1, 15, 0, 0, 0, 0)
+
+
 def create_test_resorts():
     """Create multiple test resorts with sample pistes."""
     resort1 = Resort(
@@ -82,7 +86,7 @@ def create_test_resorts():
 def create_test_weather(days=7):
     """Create test weather forecast."""
     weather = []
-    start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start = TEST_DATE
     
     for day in range(days):
         for hour in range(24):
@@ -132,7 +136,7 @@ def test_generate_resort_recommendations():
     engine = ResortRecommendationEngine(resorts, weather_forecasts)
     
     profile = SkierProfile(skill_level=SkillLevel.INTERMEDIATE)
-    start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = TEST_DATE
     
     recommendations = engine.generate_resort_recommendations(
         skier_profile=profile,
@@ -175,7 +179,7 @@ def test_resort_recommendations_ranked_by_score():
     engine = ResortRecommendationEngine(resorts, weather_forecasts)
     
     profile = SkierProfile(skill_level=SkillLevel.INTERMEDIATE)
-    start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = TEST_DATE
     
     recommendations = engine.generate_resort_recommendations(
         skier_profile=profile,
@@ -205,7 +209,7 @@ def test_resort_recommendations_top_n_limit():
     engine = ResortRecommendationEngine(resorts, weather_forecasts)
     
     profile = SkierProfile(skill_level=SkillLevel.INTERMEDIATE)
-    start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = TEST_DATE
     
     recommendations = engine.generate_resort_recommendations(
         skier_profile=profile,
@@ -234,7 +238,7 @@ def test_resort_recommendations_include_piste_details():
     engine = ResortRecommendationEngine(resorts, weather_forecasts)
     
     profile = SkierProfile(skill_level=SkillLevel.INTERMEDIATE)
-    start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = TEST_DATE
     
     recommendations = engine.generate_resort_recommendations(
         skier_profile=profile,

@@ -26,6 +26,8 @@ PISTE_COUNT_MULTIPLIER = 1.5
 
 # Weather history lookback
 RECENT_SNOWFALL_HOURS = 12
+OVERNIGHT_WEATHER_START_HOUR = 16  # Hours back from current time
+OVERNIGHT_WEATHER_END_HOUR = 8     # Hours back from current time
 
 
 class ResortRecommendationEngine:
@@ -203,13 +205,18 @@ class ResortRecommendationEngine:
         # Calculate overall resort score
         # Use weighted average: top pistes count more
         top_pistes = piste_scores[:top_n_pistes]
-        if len(piste_scores) >= MIN_PISTES_FOR_WEIGHTED_SCORING:
+        num_pistes = len(piste_scores)
+        
+        if num_pistes >= MIN_PISTES_FOR_WEIGHTED_SCORING:
             # Many good pistes: weight heavily on top scores
             weights = [TOP_PISTE_WEIGHT, SECOND_PISTE_WEIGHT, THIRD_PISTE_WEIGHT] + \
-                      [DEFAULT_PISTE_WEIGHT] * (len(piste_scores) - 3)
+                      [DEFAULT_PISTE_WEIGHT] * (num_pistes - 3)
+        elif num_pistes >= 2:
+            # Few pistes: more uniform weighting
+            weights = [UNIFORM_TOP_WEIGHT] + [DEFAULT_PISTE_WEIGHT] * (num_pistes - 1)
         else:
-            # Fewer pistes: more uniform weighting
-            weights = [UNIFORM_TOP_WEIGHT] + [DEFAULT_PISTE_WEIGHT] * (len(piste_scores) - 1)
+            # Single piste: just use its score
+            weights = [DEFAULT_PISTE_WEIGHT]
         
         weighted_scores = [
             piste_scores[i].score * weights[min(i, len(weights) - 1)]
@@ -248,7 +255,8 @@ class ResortRecommendationEngine:
         has_snow, snow_amount = has_recent_snowfall(recent_weather, hours=RECENT_SNOWFALL_HOURS)
         
         # Check overnight refreeze
-        overnight = recent_weather[-16:-8] if len(recent_weather) >= 16 else []
+        overnight = recent_weather[-OVERNIGHT_WEATHER_START_HOUR:-OVERNIGHT_WEATHER_END_HOUR] \
+                    if len(recent_weather) >= OVERNIGHT_WEATHER_START_HOUR else []
         refreeze_quality, _ = evaluate_overnight_refreeze(overnight)
         
         # Check temperature trend
