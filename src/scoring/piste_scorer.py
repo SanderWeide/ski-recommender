@@ -40,7 +40,7 @@ def score_piste(
     """
     # Determine snow state
     snow_state = determine_snow_state(
-        piste, weather, time_of_day.value, recent_weather
+        piste, weather, time_of_day, recent_weather
     )
     
     # Base score from snow state
@@ -66,7 +66,7 @@ def score_piste(
     refreeze_bonus = refreeze_score * 15 if time_of_day == TimeOfDay.MORNING else refreeze_score * 5
     
     # Sun exposure - can be good or bad depending on conditions
-    sun_factor = get_sun_exposure_factor(piste.aspect, time_of_day.value)
+    sun_factor = get_sun_exposure_factor(piste.aspect, time_of_day)
     if temp_at_piste > 2:
         # Warm: sun is bad (melting)
         sun_adjustment = -sun_factor * 15

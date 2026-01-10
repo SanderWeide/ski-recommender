@@ -1,14 +1,14 @@
 """Snow surface state modeling based on weather conditions."""
 
-from src.models import SnowState, WeatherConditions, Piste, Aspect
-from typing import List, Tuple
+from src.models import SnowState, WeatherConditions, Piste, Aspect, TimeOfDay
+from typing import List, Tuple, Union
 from datetime import datetime, time
 
 
 def determine_snow_state(
     piste: Piste,
     weather: WeatherConditions,
-    time_of_day: str,
+    time_of_day: Union[TimeOfDay, str],
     recent_weather: List[WeatherConditions]
 ) -> SnowState:
     """Determine snow surface state for a piste at a given time.
@@ -16,12 +16,15 @@ def determine_snow_state(
     Args:
         piste: The piste to evaluate
         weather: Current weather conditions
-        time_of_day: "morning", "late_morning", or "afternoon"
+        time_of_day: TimeOfDay enum or string ("morning", "late_morning", "afternoon")
         recent_weather: Weather conditions from the past 24 hours
     
     Returns:
         SnowState enum value
     """
+    # Convert TimeOfDay enum to string if needed
+    if isinstance(time_of_day, TimeOfDay):
+        time_of_day = time_of_day.value
     # Get overnight conditions (last 8 hours from midnight to 8am)
     overnight_temps = [w.temperature for w in recent_weather[-16:-8]] if len(recent_weather) >= 16 else []
     overnight_snow = sum(w.snowfall for w in recent_weather[-16:-8]) if len(recent_weather) >= 16 else 0
@@ -85,16 +88,19 @@ def determine_snow_state(
     return SnowState.SLUSHY
 
 
-def is_sun_exposed(aspect: Aspect, time_of_day: str) -> bool:
+def is_sun_exposed(aspect: Aspect, time_of_day: Union[TimeOfDay, str]) -> bool:
     """Determine if a slope aspect receives significant sun at a time of day.
     
     Args:
         aspect: Slope aspect (direction it faces)
-        time_of_day: "morning", "late_morning", or "afternoon"
+        time_of_day: TimeOfDay enum or string ("morning", "late_morning", "afternoon")
     
     Returns:
         True if slope receives significant sun exposure
     """
+    # Convert TimeOfDay enum to string if needed
+    if isinstance(time_of_day, TimeOfDay):
+        time_of_day = time_of_day.value
     # Morning sun: East-facing slopes
     if time_of_day == "morning":
         return aspect in [Aspect.E, Aspect.NE, Aspect.SE]
@@ -110,12 +116,22 @@ def is_sun_exposed(aspect: Aspect, time_of_day: str) -> bool:
     return False
 
 
-def get_sun_exposure_factor(aspect: Aspect, time_of_day: str) -> float:
+def get_sun_exposure_factor(aspect: Aspect, time_of_day: Union[TimeOfDay, str]) -> float:
     """Get a numerical sun exposure factor (0-1).
     
     Higher values mean more sun exposure which can degrade snow quality
     in warm conditions but improve it in cold conditions.
+    
+    Args:
+        aspect: Slope aspect (direction it faces)
+        time_of_day: TimeOfDay enum or string ("morning", "late_morning", "afternoon")
+    
+    Returns:
+        Exposure factor from 0 (no sun) to 1 (full sun)
     """
+    # Convert TimeOfDay enum to string if needed
+    if isinstance(time_of_day, TimeOfDay):
+        time_of_day = time_of_day.value
     exposure_map = {
         "morning": {
             Aspect.E: 1.0,

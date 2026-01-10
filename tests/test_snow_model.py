@@ -11,12 +11,12 @@ from src.snow_model.surface_state import (
 def test_is_sun_exposed():
     """Test sun exposure determination."""
     # Morning: East-facing gets sun
-    assert is_sun_exposed(Aspect.E, "morning") == True
-    assert is_sun_exposed(Aspect.W, "morning") == False
+    assert is_sun_exposed(Aspect.E, "morning")
+    assert not is_sun_exposed(Aspect.W, "morning")
     
     # Afternoon: West-facing gets sun
-    assert is_sun_exposed(Aspect.W, "afternoon") == True
-    assert is_sun_exposed(Aspect.N, "afternoon") == False
+    assert is_sun_exposed(Aspect.W, "afternoon")
+    assert not is_sun_exposed(Aspect.N, "afternoon")
 
 
 def test_sun_exposure_factor():
