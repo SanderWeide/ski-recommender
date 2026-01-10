@@ -14,6 +14,19 @@ from src.snow_model.freeze_thaw import has_recent_snowfall, evaluate_overnight_r
 # Score threshold for suitable pistes
 MIN_SCORE_THRESHOLD = 50
 
+# Resort scoring constants
+MIN_PISTES_FOR_WEIGHTED_SCORING = 5
+TOP_PISTE_WEIGHT = 3
+SECOND_PISTE_WEIGHT = 2
+THIRD_PISTE_WEIGHT = 1.5
+DEFAULT_PISTE_WEIGHT = 1
+UNIFORM_TOP_WEIGHT = 2
+MAX_VARIETY_BONUS = 10
+PISTE_COUNT_MULTIPLIER = 1.5
+
+# Weather history lookback
+RECENT_SNOWFALL_HOURS = 12
+
 
 class ResortRecommendationEngine:
     """Engine for generating resort-level recommendations across multiple resorts."""
@@ -190,12 +203,13 @@ class ResortRecommendationEngine:
         # Calculate overall resort score
         # Use weighted average: top pistes count more
         top_pistes = piste_scores[:top_n_pistes]
-        if len(piste_scores) >= 5:
+        if len(piste_scores) >= MIN_PISTES_FOR_WEIGHTED_SCORING:
             # Many good pistes: weight heavily on top scores
-            weights = [3, 2, 1.5] + [1] * (len(piste_scores) - 3)
+            weights = [TOP_PISTE_WEIGHT, SECOND_PISTE_WEIGHT, THIRD_PISTE_WEIGHT] + \
+                      [DEFAULT_PISTE_WEIGHT] * (len(piste_scores) - 3)
         else:
             # Fewer pistes: more uniform weighting
-            weights = [2] + [1] * (len(piste_scores) - 1)
+            weights = [UNIFORM_TOP_WEIGHT] + [DEFAULT_PISTE_WEIGHT] * (len(piste_scores) - 1)
         
         weighted_scores = [
             piste_scores[i].score * weights[min(i, len(weights) - 1)]
@@ -204,7 +218,7 @@ class ResortRecommendationEngine:
         resort_score = sum(weighted_scores) / sum(weights[:len(piste_scores)])
         
         # Bonus for having many suitable pistes
-        variety_bonus = min(10, len(piste_scores) * 1.5)
+        variety_bonus = min(MAX_VARIETY_BONUS, len(piste_scores) * PISTE_COUNT_MULTIPLIER)
         resort_score = min(100, resort_score + variety_bonus)
         
         # Generate summary
@@ -231,7 +245,7 @@ class ResortRecommendationEngine:
     ) -> str:
         """Generate a summary of snow conditions."""
         # Check for recent snowfall
-        has_snow, snow_amount = has_recent_snowfall(recent_weather, hours=12)
+        has_snow, snow_amount = has_recent_snowfall(recent_weather, hours=RECENT_SNOWFALL_HOURS)
         
         # Check overnight refreeze
         overnight = recent_weather[-16:-8] if len(recent_weather) >= 16 else []
