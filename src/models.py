@@ -119,3 +119,25 @@ class Resort:
     latitude: float
     longitude: float
     pistes: List[Piste]
+
+
+@dataclass
+class ResortScore:
+    """Score for a resort at a specific time."""
+    resort: Resort
+    score: float  # 0-100, aggregate score
+    num_suitable_pistes: int
+    best_piste_scores: List[PisteScore]  # Top pistes at the resort
+    snow_summary: str
+    explanation: str
+    timestamp: datetime
+    time_of_day: TimeOfDay
+
+
+@dataclass
+class ResortRecommendation:
+    """Recommendations for resorts on a specific day and time block."""
+    date: datetime
+    time_of_day: TimeOfDay
+    recommendations: List[ResortScore]
+    confidence: str  # "high", "medium", "low"

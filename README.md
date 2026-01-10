@@ -10,6 +10,8 @@ An MVP application that recommends the best groomed ski pistes for each day and 
 - **Skill-level filtering**: Tailors recommendations to beginner, intermediate, or advanced skiers
 - **Explainable AI**: Every recommendation includes a clear explanation of the factors
 - **Multiple resorts**: Supports 6 major European ski resorts
+- **Resort-level recommendations**: Compare resorts to find the best skiing destination for current conditions
+- **Piste-level recommendations**: Find the best specific pistes within a chosen resort
 
 ## Supported Resorts
 
@@ -33,7 +35,9 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Mock Data Mode (for testing)
+### Piste-Level Recommendations (Single Resort)
+
+Find the best pistes within a specific resort:
 
 ```bash
 # Basic usage with defaults (Val Thorens, intermediate)
@@ -49,6 +53,24 @@ python main.py zermatt advanced
 python main.py chamonix beginner json
 ```
 
+### Resort-Level Recommendations (Compare Resorts)
+
+Compare multiple resorts to find the best one for current conditions:
+
+```bash
+# Compare all resorts (default)
+python main_resort.py
+
+# Compare specific resorts
+python main_resort.py val_thorens,zermatt intermediate
+
+# Compare all resorts for advanced skiers
+python main_resort.py all advanced
+
+# JSON output
+python main_resort.py all intermediate json
+```
+
 ### Live API Data Mode
 
 ```bash
@@ -61,6 +83,7 @@ python main_live.py zermatt advanced json
 
 ### Command Line Arguments
 
+**Piste-Level Mode:**
 ```
 python main.py [resort_id] [skill_level] [output_format]
 
@@ -68,6 +91,16 @@ Arguments:
   resort_id      : Resort identifier (val_thorens, zermatt, chamonix, courchevel, verbier, st_anton)
   skill_level    : Skier skill level (beginner, intermediate, advanced)
   output_format  : Output format (text or json)
+```
+
+**Resort-Level Mode:**
+```
+python main_resort.py [resort_selection] [skill_level] [output_format]
+
+Arguments:
+  resort_selection : 'all' (default) or comma-separated resort IDs (e.g., 'val_thorens,zermatt')
+  skill_level      : Skier skill level (beginner, intermediate, advanced)
+  output_format    : Output format (text or json)
 ```
 
 ## How It Works
@@ -139,6 +172,8 @@ pytest tests/test_models.py
 
 ## Example Output
 
+### Piste-Level Recommendations
+
 ```
 === Ski Piste Recommendations for Val Thorens ===
 
@@ -165,6 +200,39 @@ Top Recommendations:
      Snow State: Firm Groomed
      NW-facing black piste, high altitude, cold overnight refreeze → firm, grippy snow, groomed overnight.
 ```
+
+### Resort-Level Recommendations
+
+```
+=== Ski Resort Recommendations ===
+
+============================================================
+Date: 2026-01-11
+============================================================
+
+Morning (08:00-10:30)
+------------------------------------------------------------
+Confidence: HIGH
+
+Top Resorts:
+
+  1. Val Thorens, France (Score: 100/100)
+     Conditions: Fresh snow (3cm), temperatures warming.
+     5 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Top Pistes:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 98/100)
+     Conditions: Fresh snow (3cm), temperatures warming.
+     3 suitable pistes, altitude range 2500-3800m, top pistes averaging 92/100.
+     Top Pistes:
+       1. Blauherd (BLUE, 100/100)
+       2. Stockhorn (RED, 91/100)
+       3. Plateau Rosa (BLUE, 85/100)
+```
+
 
 ## Design Philosophy
 
