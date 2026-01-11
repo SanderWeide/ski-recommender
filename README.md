@@ -15,14 +15,13 @@ An MVP application that recommends the best groomed ski pistes for each day and 
 
 ## Supported Resorts
 
-- **Val Thorens** (France) - `val_thorens`
-- **Zermatt** (Switzerland) - `zermatt`
-- **Chamonix** (France) - `chamonix`
-- **Courchevel** (France) - `courchevel`
-- **Verbier** (Switzerland) - `verbier`
-- **St. Anton** (Austria) - `st_anton`
-- **Silvretta Arena** (Austria/Switzerland) - `silvretta_arena`
-- **St. Anton** (Austria) - `st_anton`
+- **Val Thorens** (France) - `val_thorens` - 8 pistes
+- **Zermatt** (Switzerland) - `zermatt` - 7 pistes
+- **Chamonix** (France) - `chamonix` - 7 pistes
+- **Courchevel** (France) - `courchevel` - 7 pistes
+- **Verbier** (Switzerland) - `verbier` - 7 pistes
+- **St. Anton** (Austria) - `st_anton` - 7 pistes
+- **Silvretta Arena** (Austria/Switzerland) - `silvretta_arena` - 8 pistes
 
 ## Installation
 
