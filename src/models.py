@@ -149,3 +149,12 @@ class DailyResortRecommendation:
     date: datetime
     recommendations: List[ResortScore]
     confidence: str  # "high", "medium", "low"
+
+
+@dataclass
+class WeeklyResortRecommendation:
+    """Recommendations for resorts aggregated over a full week."""
+    start_date: datetime
+    end_date: datetime
+    recommendations: List[ResortScore]
+    confidence: str  # "high", "medium", "low"

@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from src.models import (
     Resort, SkierProfile, WeatherConditions, PisteScore,
-    ResortScore, ResortRecommendation, TimeOfDay, DailyResortRecommendation
+    ResortScore, ResortRecommendation, TimeOfDay, DailyResortRecommendation,
+    WeeklyResortRecommendation
 )
 from src.scoring.piste_scorer import score_piste
 from src.scoring.time_of_day import list_time_blocks, get_representative_hour
@@ -259,6 +260,181 @@ class ResortRecommendationEngine:
         
         return DailyResortRecommendation(
             date=date,
+            recommendations=top_resorts,
+            confidence=confidence,
+        )
+    
+    def generate_weekly_resort_recommendations(
+        self,
+        skier_profile: SkierProfile,
+        start_date: datetime,
+        top_n_resorts: int = 3,
+        top_n_pistes: int = 3,
+    ) -> WeeklyResortRecommendation:
+        """Generate resort-level recommendations aggregated over a full week.
+        
+        Args:
+            skier_profile: Skier preferences and skill level
+            start_date: Start date for the week
+            top_n_resorts: Number of top resorts to return
+            top_n_pistes: Number of top pistes to include for each resort
+        
+        Returns:
+            WeeklyResortRecommendation object
+        """
+        resort_weekly_scores = {}
+        end_date = start_date + timedelta(days=6)  # 7-day week
+        
+        for resort in self.resorts:
+            # Get weather forecast for this resort
+            weather_forecast = self.weather_forecasts.get(resort.id, [])
+            if not weather_forecast:
+                continue
+            
+            # Filter weather for the week
+            week_weather = [
+                w for w in weather_forecast
+                if start_date.date() <= w.timestamp.date() <= end_date.date()
+            ]
+            
+            if not week_weather:
+                continue
+            
+            # Score resort for each day and aggregate
+            daily_scores = []
+            all_piste_scores_for_week = []
+            
+            for day_offset in range(7):
+                date = start_date + timedelta(days=day_offset)
+                
+                # Get weather for this day
+                day_weather = [
+                    w for w in week_weather
+                    if w.timestamp.date() == date.date()
+                ]
+                
+                if not day_weather:
+                    continue
+                
+                # Score resort for each time block on this day
+                day_time_block_scores = []
+                
+                for time_block in list_time_blocks():
+                    # Get weather for this time block
+                    representative_hour = get_representative_hour(time_block)
+                    block_weather = None
+                    
+                    for w in day_weather:
+                        if w.timestamp.hour == representative_hour:
+                            block_weather = w
+                            break
+                    
+                    if not block_weather:
+                        continue
+                    
+                    # Get weather history
+                    weather_index = weather_forecast.index(block_weather)
+                    recent_weather = weather_forecast[max(0, weather_index - 24):weather_index + 1]
+                    
+                    # Score all pistes for this time block
+                    piste_scores = []
+                    for piste in resort.pistes:
+                        score, snow_state, explanation = score_piste(
+                            piste,
+                            block_weather,
+                            time_block,
+                            recent_weather,
+                            skier_profile.skill_level,
+                        )
+                        
+                        if score >= MIN_SCORE_THRESHOLD:
+                            piste_scores.append(PisteScore(
+                                piste=piste,
+                                score=score,
+                                snow_state=snow_state,
+                                explanation=explanation,
+                                timestamp=block_weather.timestamp,
+                                time_of_day=time_block,
+                            ))
+                    
+                    if piste_scores:
+                        piste_scores.sort(key=lambda x: x.score, reverse=True)
+                        all_piste_scores_for_week.extend(piste_scores)
+                        
+                        # Calculate average score for this time block
+                        avg_score = sum(ps.score for ps in piste_scores[:5]) / min(5, len(piste_scores))
+                        day_time_block_scores.append(avg_score)
+                
+                # Calculate average for this day
+                if day_time_block_scores:
+                    day_avg_score = sum(day_time_block_scores) / len(day_time_block_scores)
+                    daily_scores.append(day_avg_score)
+            
+            # If we have scores for this resort across the week
+            if daily_scores and all_piste_scores_for_week:
+                # Calculate overall weekly score (average across days)
+                weekly_score = sum(daily_scores) / len(daily_scores)
+                
+                # Get best pistes across entire week (deduplicate by piste id, keep highest score)
+                best_pistes_map = {}
+                for ps in all_piste_scores_for_week:
+                    if ps.piste.id not in best_pistes_map or ps.score > best_pistes_map[ps.piste.id].score:
+                        best_pistes_map[ps.piste.id] = ps
+                
+                best_pistes = sorted(best_pistes_map.values(), key=lambda x: x.score, reverse=True)[:top_n_pistes]
+                
+                # Get a representative weather snapshot (mid-week, midday)
+                midweek_date = start_date + timedelta(days=3)
+                midweek_weather = None
+                for w in week_weather:
+                    if w.timestamp.date() == midweek_date.date() and w.timestamp.hour == 12:
+                        midweek_weather = w
+                        break
+                
+                # Fallback to any midweek weather
+                if not midweek_weather:
+                    for w in week_weather:
+                        if w.timestamp.date() == midweek_date.date():
+                            midweek_weather = w
+                            break
+                
+                # Fallback to middle of week weather
+                if not midweek_weather and week_weather:
+                    midweek_weather = week_weather[len(week_weather) // 2]
+                
+                if midweek_weather:
+                    weather_index = weather_forecast.index(midweek_weather)
+                    recent_weather = weather_forecast[max(0, weather_index - 24):weather_index + 1]
+                    
+                    snow_summary = self._generate_snow_summary(recent_weather, midweek_weather)
+                    explanation = self._generate_resort_explanation(
+                        resort, len(best_pistes_map), best_pistes, midweek_weather
+                    )
+                    explanation = f"Average conditions over 7 days, {explanation}"
+                    
+                    resort_weekly_scores[resort.id] = ResortScore(
+                        resort=resort,
+                        score=weekly_score,
+                        num_suitable_pistes=len(best_pistes_map),
+                        best_piste_scores=best_pistes,
+                        snow_summary=snow_summary,
+                        explanation=explanation,
+                        timestamp=midweek_weather.timestamp,
+                        time_of_day=TimeOfDay.LATE_MORNING,  # Representative time
+                    )
+        
+        # Sort resorts by score
+        sorted_resorts = sorted(resort_weekly_scores.values(), key=lambda x: x.score, reverse=True)
+        
+        # Take top N
+        top_resorts = sorted_resorts[:top_n_resorts]
+        
+        # Calculate confidence
+        confidence = self._calculate_confidence(sorted_resorts) if sorted_resorts else "low"
+        
+        return WeeklyResortRecommendation(
+            start_date=start_date,
+            end_date=end_date,
             recommendations=top_resorts,
             confidence=confidence,
         )

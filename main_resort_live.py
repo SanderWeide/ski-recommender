@@ -9,7 +9,8 @@ from src.services.open_meteo import get_weather_forecast
 from src.recommendation.resort_engine import ResortRecommendationEngine
 from src.recommendation.formatter import (
     format_resort_recommendations_text, format_resort_recommendations_json,
-    format_daily_resort_recommendations_text, format_daily_resort_recommendations_json
+    format_daily_resort_recommendations_text, format_daily_resort_recommendations_json,
+    format_weekly_resort_recommendation_text, format_weekly_resort_recommendation_json
 )
 
 
@@ -119,7 +120,7 @@ def main():
     if len(sys.argv) > 3:
         # Check if argument is a mode or output format
         arg3 = sys.argv[3].lower()
-        if arg3 in ["daily", "time_blocks"]:
+        if arg3 in ["daily", "time_blocks", "weekly"]:
             mode = arg3
             output_format = sys.argv[4].lower() if len(sys.argv) > 4 else "text"
         else:
@@ -129,7 +130,22 @@ def main():
     engine = ResortRecommendationEngine(resorts, weather_forecasts)
     start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     
-    if mode == "daily":
+    if mode == "weekly":
+        print("Generating weekly resort recommendation (7-day aggregation)...\n")
+        recommendation = engine.generate_weekly_resort_recommendations(
+            skier_profile=skier_profile,
+            start_date=start_date,
+            top_n_resorts=min(5, len(resorts)),  # Show top N or all if fewer
+            top_n_pistes=3,  # Show top 3 pistes per resort
+        )
+        
+        if output_format == "json":
+            output = format_weekly_resort_recommendation_json(recommendation)
+            print(output)
+        else:
+            output = format_weekly_resort_recommendation_text(recommendation)
+            print(output)
+    elif mode == "daily":
         print("Generating daily resort recommendations (24-hour aggregation)...\n")
         recommendations = engine.generate_daily_resort_recommendations(
             skier_profile=skier_profile,
