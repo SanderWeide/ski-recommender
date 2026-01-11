@@ -9,16 +9,19 @@ An MVP application that recommends the best groomed ski pistes for each day and 
 - **Time-of-day optimization**: Provides recommendations for morning, late morning, and afternoon
 - **Skill-level filtering**: Tailors recommendations to beginner, intermediate, or advanced skiers
 - **Explainable AI**: Every recommendation includes a clear explanation of the factors
-- **Multiple resorts**: Supports 6 major European ski resorts
+- **Multiple resorts**: Supports 7 major European ski resorts
+- **Resort-level recommendations**: Compare resorts to find the best skiing destination for current conditions
+- **Piste-level recommendations**: Find the best specific pistes within a chosen resort
 
 ## Supported Resorts
 
-- **Val Thorens** (France) - `val_thorens`
-- **Zermatt** (Switzerland) - `zermatt`
-- **Chamonix** (France) - `chamonix`
-- **Courchevel** (France) - `courchevel`
-- **Verbier** (Switzerland) - `verbier`
-- **St. Anton** (Austria) - `st_anton`
+- **Val Thorens** (France) - `val_thorens` - 8 pistes
+- **Zermatt** (Switzerland) - `zermatt` - 7 pistes
+- **Chamonix** (France) - `chamonix` - 7 pistes
+- **Courchevel** (France) - `courchevel` - 7 pistes
+- **Verbier** (Switzerland) - `verbier` - 7 pistes
+- **St. Anton** (Austria) - `st_anton` - 7 pistes
+- **Silvretta Arena** (Austria/Switzerland) - `silvretta_arena` - 8 pistes
 
 ## Installation
 
@@ -31,9 +34,41 @@ cd ski-recommender
 pip install -r requirements.txt
 ```
 
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
 ## Usage
 
-### Mock Data Mode (for testing)
+### Piste-Level Recommendations (Single Resort)
+
+Find the best pistes within a specific resort:
 
 ```bash
 # Basic usage with defaults (Val Thorens, intermediate)
@@ -49,8 +84,169 @@ python main.py zermatt advanced
 python main.py chamonix beginner json
 ```
 
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
+### Resort-Level Recommendations (Compare Resorts)
+
+Compare multiple resorts to find the best one for current conditions:
+
+**Time Block Mode** (default - shows recommendations for morning, late morning, and afternoon):
+```bash
+# Compare all resorts
+python main_resort.py all intermediate
+
+# Compare specific resorts
+python main_resort.py val_thorens,zermatt intermediate
+
+# JSON output
+python main_resort.py all intermediate json
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
+**Daily Mode** (aggregates recommendations over 24 hours):
+```bash
+# Compare all resorts with daily aggregation
+python main_resort.py all intermediate daily
+
+# Compare specific resorts with daily recommendations
+python main_resort.py val_thorens,zermatt advanced daily
+
+# JSON output
+python main_resort.py all intermediate daily json
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
+**Weekly Mode** (aggregates recommendations over 7 days):
+```bash
+# Compare all resorts with weekly aggregation
+python main_resort.py all intermediate weekly
+
+# Compare specific resorts with weekly recommendation
+python main_resort.py val_thorens,zermatt advanced weekly
+
+# JSON output
+python main_resort.py all intermediate weekly json
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
 ### Live API Data Mode
 
+**Piste-Level with Live Data:**
 ```bash
 # Uses real weather data from Open-Meteo API
 python main_live.py val_thorens intermediate
@@ -59,16 +255,230 @@ python main_live.py val_thorens intermediate
 python main_live.py zermatt advanced json
 ```
 
-### Command Line Arguments
+### Weekly Resort Recommendations
 
 ```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
+**Resort-Level with Live Data:**
+```bash
+# Compare all resorts with live weather data
+python main_resort_live.py all intermediate
+
+# Compare specific resorts with live data (time blocks)
+python main_resort_live.py val_thorens,zermatt intermediate
+
+# Daily mode with live data
+python main_resort_live.py all advanced daily
+
+# Weekly mode with live data
+python main_resort_live.py all intermediate weekly
+
+# JSON output
+python main_resort_live.py all intermediate weekly json
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
+### Command Line Arguments
+
+**Piste-Level Mode:**
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
 python main.py [resort_id] [skill_level] [output_format]
 
 Arguments:
-  resort_id      : Resort identifier (val_thorens, zermatt, chamonix, courchevel, verbier, st_anton)
+  resort_id      : Resort identifier (val_thorens, zermatt, chamonix, courchevel, verbier, st_anton, silvretta_arena)
   skill_level    : Skier skill level (beginner, intermediate, advanced)
   output_format  : Output format (text or json)
 ```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
+**Resort-Level Mode:**
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+python main_resort.py [resort_selection] [skill_level] [mode] [output_format]
+
+Arguments:
+  resort_selection : 'all' (default) or comma-separated resort IDs (e.g., 'val_thorens,zermatt')
+  skill_level      : Skier skill level (beginner, intermediate, advanced)
+  mode             : 'time_blocks' (default, shows morning/late morning/afternoon), 
+                     'daily' (24-hour aggregation), or 
+                     'weekly' (7-day aggregation)
+  output_format    : Output format (text or json)
+
+Note: mode and output_format are optional. If only 3 arguments provided, the 3rd can be either mode or format.
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
 
 ## How It Works
 
@@ -104,16 +514,78 @@ Each piste receives a score (0-100) based on:
 ## Architecture
 
 ```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
 /src
   /services         # External API clients (Open-Meteo)
   /snow_model       # Snow surface state modeling
   /scoring          # Piste scoring engine
-  /recommendation   # Main recommendation engine
+  /recommendation   # Main recommendation engine (piste & resort)
   /data             # Resort and piste data
 /tests              # Test suite
-main.py             # CLI with mock data
-main_live.py        # CLI with live API data
+main.py             # Piste CLI with mock data
+main_live.py        # Piste CLI with live API data
+main_resort.py      # Resort comparison CLI with mock data
+main_resort_live.py # Resort comparison CLI with live API data
 ```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
 
 ## Testing
 
@@ -131,6 +603,36 @@ pytest --cov=src tests/
 pytest tests/test_models.py
 ```
 
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
 ## Data Sources
 
 - **Weather**: [Open-Meteo API](https://open-meteo.com/) - Free, no API key required
@@ -139,7 +641,39 @@ pytest tests/test_models.py
 
 ## Example Output
 
+### Piste-Level Recommendations
+
 ```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
 === Ski Piste Recommendations for Val Thorens ===
 
 ============================================================
@@ -165,6 +699,129 @@ Top Recommendations:
      Snow State: Firm Groomed
      NW-facing black piste, high altitude, cold overnight refreeze → firm, grippy snow, groomed overnight.
 ```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
+### Resort-Level Recommendations
+
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+=== Ski Resort Recommendations ===
+
+============================================================
+Date: 2026-01-11
+============================================================
+
+Morning (08:00-10:30)
+------------------------------------------------------------
+Confidence: HIGH
+
+Top Resorts:
+
+  1. Val Thorens, France (Score: 100/100)
+     Conditions: Fresh snow (3cm), temperatures warming.
+     5 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Top Pistes:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 98/100)
+     Conditions: Fresh snow (3cm), temperatures warming.
+     3 suitable pistes, altitude range 2500-3800m, top pistes averaging 92/100.
+     Top Pistes:
+       1. Blauherd (BLUE, 100/100)
+       2. Stockhorn (RED, 91/100)
+       3. Plateau Rosa (BLUE, 85/100)
+```
+
+### Weekly Resort Recommendations
+
+```
+=== Weekly Ski Resort Recommendation ===
+
+============================================================
+Week: 2026-01-11 to 2026-01-17
+============================================================
+Confidence: MEDIUM
+
+Top Resorts for the Week:
+
+  1. Val Thorens, France (Score: 98/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 8 suitable pistes, altitude range 2300-3200m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Cime Caron (RED, 100/100)
+       2. Cascades (BLUE, 100/100)
+       3. Moraine (GREEN, 100/100)
+
+  2. Zermatt, Switzerland (Score: 94/100)
+     Conditions: Fresh snow (2cm), good overnight refreeze, temperatures warming.
+     Average conditions over 7 days, 7 suitable pistes, altitude range 2500-3800m, top pistes averaging 100/100.
+     Best Pistes for the Week:
+       1. Blauherd (BLUE, 100/100)
+       2. Gornergrat (BLUE, 100/100)
+       3. Stockhorn (RED, 100/100)
+```
+
+
 
 ## Design Philosophy
 

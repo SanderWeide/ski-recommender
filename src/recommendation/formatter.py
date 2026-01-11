@@ -3,7 +3,10 @@
 import json
 from typing import List
 from datetime import datetime
-from src.models import DailyRecommendation, PisteScore, TimeOfDay
+from src.models import (
+    DailyRecommendation, PisteScore, TimeOfDay, ResortRecommendation,
+    DailyResortRecommendation, WeeklyResortRecommendation
+)
 
 
 def format_recommendations_text(
@@ -109,5 +112,307 @@ def format_recommendations_json(
             rec_dict["pistes"].append(piste_dict)
         
         output["recommendations"].append(rec_dict)
+    
+    return json.dumps(output, indent=2)
+
+
+def format_resort_recommendations_text(
+    recommendations: List[ResortRecommendation],
+) -> str:
+    """Format resort-level recommendations as human-readable text.
+    
+    Args:
+        recommendations: List of resort recommendations
+    
+    Returns:
+        Formatted text string
+    """
+    lines = []
+    lines.append("=== Ski Resort Recommendations ===\n")
+    
+    # Group by date
+    by_date = {}
+    for rec in recommendations:
+        date_key = rec.date.strftime("%Y-%m-%d")
+        if date_key not in by_date:
+            by_date[date_key] = []
+        by_date[date_key].append(rec)
+    
+    for date_str in sorted(by_date.keys()):
+        date_recs = by_date[date_str]
+        lines.append(f"\n{'='*60}")
+        lines.append(f"Date: {date_str}")
+        lines.append(f"{'='*60}\n")
+        
+        for rec in date_recs:
+            time_name = {
+                TimeOfDay.MORNING: "Morning (08:00-10:30)",
+                TimeOfDay.LATE_MORNING: "Late Morning (10:30-12:30)",
+                TimeOfDay.AFTERNOON: "Afternoon (12:30-16:00)",
+            }[rec.time_of_day]
+            
+            lines.append(f"\n{time_name}")
+            lines.append(f"{'-'*60}")
+            lines.append(f"Confidence: {rec.confidence.upper()}\n")
+            
+            if not rec.recommendations:
+                lines.append("  No suitable resorts found for these conditions.\n")
+                continue
+            
+            lines.append("Top Resorts:")
+            for i, resort_score in enumerate(rec.recommendations, 1):
+                lines.append(f"\n  {i}. {resort_score.resort.name}, {resort_score.resort.country} (Score: {resort_score.score:.0f}/100)")
+                lines.append(f"     Conditions: {resort_score.snow_summary}")
+                lines.append(f"     {resort_score.explanation}")
+                
+                # Show top pistes at this resort
+                if resort_score.best_piste_scores:
+                    lines.append(f"     Top Pistes:")
+                    for j, piste_score in enumerate(resort_score.best_piste_scores[:3], 1):
+                        lines.append(f"       {j}. {piste_score.piste.name} ({piste_score.piste.difficulty.value.upper()}, {piste_score.score:.0f}/100)")
+    
+    lines.append(f"\n{'='*60}\n")
+    return "\n".join(lines)
+
+
+def format_resort_recommendations_json(
+    recommendations: List[ResortRecommendation],
+) -> str:
+    """Format resort-level recommendations as JSON.
+    
+    Args:
+        recommendations: List of resort recommendations
+    
+    Returns:
+        JSON string
+    """
+    output = {
+        "generated_at": datetime.now().isoformat(),
+        "recommendations": []
+    }
+    
+    for rec in recommendations:
+        rec_dict = {
+            "date": rec.date.strftime("%Y-%m-%d"),
+            "time_of_day": rec.time_of_day.value,
+            "confidence": rec.confidence,
+            "resorts": []
+        }
+        
+        for resort_score in rec.recommendations:
+            resort_dict = {
+                "name": resort_score.resort.name,
+                "id": resort_score.resort.id,
+                "country": resort_score.resort.country,
+                "score": round(resort_score.score, 1),
+                "num_suitable_pistes": resort_score.num_suitable_pistes,
+                "snow_summary": resort_score.snow_summary,
+                "explanation": resort_score.explanation,
+                "top_pistes": []
+            }
+            
+            for piste_score in resort_score.best_piste_scores:
+                piste_dict = {
+                    "name": piste_score.piste.name,
+                    "difficulty": piste_score.piste.difficulty.value,
+                    "score": round(piste_score.score, 1),
+                    "altitude_range": [
+                        piste_score.piste.altitude_min,
+                        piste_score.piste.altitude_max
+                    ],
+                }
+                resort_dict["top_pistes"].append(piste_dict)
+            
+            rec_dict["resorts"].append(resort_dict)
+        
+        output["recommendations"].append(rec_dict)
+    
+    return json.dumps(output, indent=2)
+
+
+def format_daily_resort_recommendations_text(
+    recommendations: List[DailyResortRecommendation],
+) -> str:
+    """Format daily resort-level recommendations as human-readable text.
+    
+    Args:
+        recommendations: List of daily resort recommendations
+    
+    Returns:
+        Formatted text string
+    """
+    lines = []
+    lines.append("=== Daily Ski Resort Recommendations ===\n")
+    
+    for rec in recommendations:
+        date_str = rec.date.strftime("%Y-%m-%d")
+        lines.append(f"\n{'='*60}")
+        lines.append(f"Date: {date_str} (Full Day)")
+        lines.append(f"{'='*60}")
+        lines.append(f"Confidence: {rec.confidence.upper()}\n")
+        
+        if not rec.recommendations:
+            lines.append("  No suitable resorts found for these conditions.\n")
+            continue
+        
+        lines.append("Top Resorts for the Day:")
+        for i, resort_score in enumerate(rec.recommendations, 1):
+            lines.append(f"\n  {i}. {resort_score.resort.name}, {resort_score.resort.country} (Score: {resort_score.score:.0f}/100)")
+            lines.append(f"     Conditions: {resort_score.snow_summary}")
+            lines.append(f"     {resort_score.explanation}")
+            
+            # Show top pistes at this resort
+            if resort_score.best_piste_scores:
+                lines.append(f"     Best Pistes Throughout the Day:")
+                for j, piste_score in enumerate(resort_score.best_piste_scores[:3], 1):
+                    lines.append(f"       {j}. {piste_score.piste.name} ({piste_score.piste.difficulty.value.upper()}, {piste_score.score:.0f}/100)")
+    
+    lines.append(f"\n{'='*60}\n")
+    return "\n".join(lines)
+
+
+def format_daily_resort_recommendations_json(
+    recommendations: List[DailyResortRecommendation],
+) -> str:
+    """Format daily resort-level recommendations as JSON.
+    
+    Args:
+        recommendations: List of daily resort recommendations
+    
+    Returns:
+        JSON string
+    """
+    output = {
+        "generated_at": datetime.now().isoformat(),
+        "recommendations": []
+    }
+    
+    for rec in recommendations:
+        rec_dict = {
+            "date": rec.date.strftime("%Y-%m-%d"),
+            "period": "full_day",
+            "confidence": rec.confidence,
+            "resorts": []
+        }
+        
+        for resort_score in rec.recommendations:
+            resort_dict = {
+                "name": resort_score.resort.name,
+                "id": resort_score.resort.id,
+                "country": resort_score.resort.country,
+                "score": round(resort_score.score, 1),
+                "num_suitable_pistes": resort_score.num_suitable_pistes,
+                "snow_summary": resort_score.snow_summary,
+                "explanation": resort_score.explanation,
+                "top_pistes": []
+            }
+            
+            for piste_score in resort_score.best_piste_scores:
+                piste_dict = {
+                    "name": piste_score.piste.name,
+                    "difficulty": piste_score.piste.difficulty.value,
+                    "score": round(piste_score.score, 1),
+                    "altitude_range": [
+                        piste_score.piste.altitude_min,
+                        piste_score.piste.altitude_max
+                    ],
+                }
+                resort_dict["top_pistes"].append(piste_dict)
+            
+            rec_dict["resorts"].append(resort_dict)
+        
+        output["recommendations"].append(rec_dict)
+    
+    return json.dumps(output, indent=2)
+
+
+def format_weekly_resort_recommendation_text(
+    recommendation: WeeklyResortRecommendation,
+) -> str:
+    """Format weekly resort-level recommendation as human-readable text.
+    
+    Args:
+        recommendation: Weekly resort recommendation
+    
+    Returns:
+        Formatted text string
+    """
+    lines = []
+    lines.append("=== Weekly Ski Resort Recommendation ===\n")
+    
+    start_str = recommendation.start_date.strftime("%Y-%m-%d")
+    end_str = recommendation.end_date.strftime("%Y-%m-%d")
+    
+    lines.append(f"\n{'='*60}")
+    lines.append(f"Week: {start_str} to {end_str}")
+    lines.append(f"{'='*60}")
+    lines.append(f"Confidence: {recommendation.confidence.upper()}\n")
+    
+    if not recommendation.recommendations:
+        lines.append("  No suitable resorts found for these conditions.\n")
+    else:
+        lines.append("Top Resorts for the Week:")
+        for i, resort_score in enumerate(recommendation.recommendations, 1):
+            lines.append(f"\n  {i}. {resort_score.resort.name}, {resort_score.resort.country} (Score: {resort_score.score:.0f}/100)")
+            lines.append(f"     Conditions: {resort_score.snow_summary}")
+            lines.append(f"     {resort_score.explanation}")
+            
+            # Show top pistes at this resort
+            if resort_score.best_piste_scores:
+                lines.append(f"     Best Pistes for the Week:")
+                for j, piste_score in enumerate(resort_score.best_piste_scores[:3], 1):
+                    lines.append(f"       {j}. {piste_score.piste.name} ({piste_score.piste.difficulty.value.upper()}, {piste_score.score:.0f}/100)")
+    
+    lines.append(f"\n{'='*60}\n")
+    return "\n".join(lines)
+
+
+def format_weekly_resort_recommendation_json(
+    recommendation: WeeklyResortRecommendation,
+) -> str:
+    """Format weekly resort-level recommendation as JSON.
+    
+    Args:
+        recommendation: Weekly resort recommendation
+    
+    Returns:
+        JSON string
+    """
+    output = {
+        "generated_at": datetime.now().isoformat(),
+        "recommendation": {
+            "start_date": recommendation.start_date.strftime("%Y-%m-%d"),
+            "end_date": recommendation.end_date.strftime("%Y-%m-%d"),
+            "period": "weekly",
+            "confidence": recommendation.confidence,
+            "resorts": []
+        }
+    }
+    
+    for resort_score in recommendation.recommendations:
+        resort_dict = {
+            "name": resort_score.resort.name,
+            "id": resort_score.resort.id,
+            "country": resort_score.resort.country,
+            "score": round(resort_score.score, 1),
+            "num_suitable_pistes": resort_score.num_suitable_pistes,
+            "snow_summary": resort_score.snow_summary,
+            "explanation": resort_score.explanation,
+            "top_pistes": []
+        }
+        
+        for piste_score in resort_score.best_piste_scores:
+            piste_dict = {
+                "name": piste_score.piste.name,
+                "difficulty": piste_score.piste.difficulty.value,
+                "score": round(piste_score.score, 1),
+                "altitude_range": [
+                    piste_score.piste.altitude_min,
+                    piste_score.piste.altitude_max
+                ],
+            }
+            resort_dict["top_pistes"].append(piste_dict)
+        
+        output["recommendation"]["resorts"].append(resort_dict)
     
     return json.dumps(output, indent=2)

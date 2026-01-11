@@ -9,9 +9,10 @@ def test_list_resorts():
     """Test listing all resorts."""
     resorts = list_resorts()
     
-    assert len(resorts) == 6
+    assert len(resorts) == 7
     assert any(r['id'] == 'val_thorens' for r in resorts)
     assert any(r['id'] == 'zermatt' for r in resorts)
+    assert any(r['id'] == 'silvretta_arena' for r in resorts)
 
 
 def test_get_resort():
