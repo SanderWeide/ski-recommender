@@ -9,7 +9,7 @@ An MVP application that recommends the best groomed ski pistes for each day and 
 - **Time-of-day optimization**: Provides recommendations for morning, late morning, and afternoon
 - **Skill-level filtering**: Tailors recommendations to beginner, intermediate, or advanced skiers
 - **Explainable AI**: Every recommendation includes a clear explanation of the factors
-- **Multiple resorts**: Supports 6 major European ski resorts
+- **Multiple resorts**: Supports 7 major European ski resorts
 - **Resort-level recommendations**: Compare resorts to find the best skiing destination for current conditions
 - **Piste-level recommendations**: Find the best specific pistes within a chosen resort
 
@@ -20,6 +20,8 @@ An MVP application that recommends the best groomed ski pistes for each day and 
 - **Chamonix** (France) - `chamonix`
 - **Courchevel** (France) - `courchevel`
 - **Verbier** (Switzerland) - `verbier`
+- **St. Anton** (Austria) - `st_anton`
+- **Silvretta Arena** (Austria/Switzerland) - `silvretta_arena`
 - **St. Anton** (Austria) - `st_anton`
 
 ## Installation
@@ -88,7 +90,7 @@ python main_live.py zermatt advanced json
 python main.py [resort_id] [skill_level] [output_format]
 
 Arguments:
-  resort_id      : Resort identifier (val_thorens, zermatt, chamonix, courchevel, verbier, st_anton)
+  resort_id      : Resort identifier (val_thorens, zermatt, chamonix, courchevel, verbier, st_anton, silvretta_arena)
   skill_level    : Skier skill level (beginner, intermediate, advanced)
   output_format  : Output format (text or json)
 ```

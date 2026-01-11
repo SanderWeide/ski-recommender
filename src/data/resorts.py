@@ -47,6 +47,13 @@ RESORTS = {
         "latitude": 47.1275,
         "longitude": 10.2617,
     },
+    "silvretta_arena": {
+        "id": "silvretta_arena",
+        "name": "Silvretta Arena",
+        "country": "Austria/Switzerland",
+        "latitude": 46.9908,
+        "longitude": 10.2958,
+    },
 }
 
 
@@ -282,6 +289,49 @@ def get_sample_pistes(resort_id: str) -> list:
                 aspect=Aspect.NE,
                 groomed=True,
                 snowmaking=False,
+            ),
+        ]
+    elif resort_id == "silvretta_arena":
+        return [
+            Piste(
+                id="si_1",
+                name="Höllkar",
+                difficulty=Difficulty.RED,
+                altitude_min=2400,
+                altitude_max=2800,
+                aspect=Aspect.N,
+                groomed=True,
+                snowmaking=True,
+            ),
+            Piste(
+                id="si_2",
+                name="Idalp",
+                difficulty=Difficulty.BLUE,
+                altitude_min=2300,
+                altitude_max=2600,
+                aspect=Aspect.NE,
+                groomed=True,
+                snowmaking=True,
+            ),
+            Piste(
+                id="si_3",
+                name="Palinkopf",
+                difficulty=Difficulty.BLACK,
+                altitude_min=2600,
+                altitude_max=2864,
+                aspect=Aspect.N,
+                groomed=True,
+                snowmaking=False,
+            ),
+            Piste(
+                id="si_4",
+                name="Duty Free",
+                difficulty=Difficulty.RED,
+                altitude_min=2200,
+                altitude_max=2500,
+                aspect=Aspect.E,
+                groomed=True,
+                snowmaking=True,
             ),
         ]
     else:
