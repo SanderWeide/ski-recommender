@@ -59,18 +59,28 @@ python main.py chamonix beginner json
 
 Compare multiple resorts to find the best one for current conditions:
 
+**Time Block Mode** (default - shows recommendations for morning, late morning, and afternoon):
 ```bash
-# Compare all resorts (default)
-python main_resort.py
+# Compare all resorts
+python main_resort.py all intermediate
 
 # Compare specific resorts
 python main_resort.py val_thorens,zermatt intermediate
 
-# Compare all resorts for advanced skiers
-python main_resort.py all advanced
-
 # JSON output
 python main_resort.py all intermediate json
+```
+
+**Daily Mode** (aggregates recommendations over 24 hours):
+```bash
+# Compare all resorts with daily aggregation
+python main_resort.py all intermediate daily
+
+# Compare specific resorts with daily recommendations
+python main_resort.py val_thorens,zermatt advanced daily
+
+# JSON output
+python main_resort.py all intermediate daily json
 ```
 
 ### Live API Data Mode
@@ -97,12 +107,15 @@ Arguments:
 
 **Resort-Level Mode:**
 ```
-python main_resort.py [resort_selection] [skill_level] [output_format]
+python main_resort.py [resort_selection] [skill_level] [mode] [output_format]
 
 Arguments:
   resort_selection : 'all' (default) or comma-separated resort IDs (e.g., 'val_thorens,zermatt')
   skill_level      : Skier skill level (beginner, intermediate, advanced)
+  mode             : 'time_blocks' (default, shows morning/late morning/afternoon) or 'daily' (24-hour aggregation)
   output_format    : Output format (text or json)
+
+Note: mode and output_format are optional. If only 3 arguments provided, the 3rd can be either mode or format.
 ```
 
 ## How It Works

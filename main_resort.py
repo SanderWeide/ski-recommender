@@ -6,7 +6,10 @@ from datetime import datetime, timedelta
 from src.models import SkierProfile, SkillLevel, WeatherConditions
 from src.data.resorts import get_resort, list_resorts
 from src.recommendation.resort_engine import ResortRecommendationEngine
-from src.recommendation.formatter import format_resort_recommendations_text, format_resort_recommendations_json
+from src.recommendation.formatter import (
+    format_resort_recommendations_text, format_resort_recommendations_json,
+    format_daily_resort_recommendations_text, format_daily_resort_recommendations_json
+)
 
 
 def generate_mock_weather(days: int = 7) -> list:
@@ -124,28 +127,56 @@ def main():
         preferred_time=None,
     )
     
+    # Get mode (time blocks or daily)
+    mode = "time_blocks"  # Default
+    output_format = "text"  # Default
+    
+    # Parse remaining arguments
+    if len(sys.argv) > 3:
+        # Check if argument is a mode or output format
+        arg3 = sys.argv[3].lower()
+        if arg3 in ["daily", "time_blocks"]:
+            mode = arg3
+            output_format = sys.argv[4].lower() if len(sys.argv) > 4 else "text"
+        else:
+            output_format = arg3
+    
     # Generate recommendations
-    print("Generating resort recommendations...\n")
     engine = ResortRecommendationEngine(resorts, weather_forecasts)
-    
     start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    recommendations = engine.generate_resort_recommendations(
-        skier_profile=skier_profile,
-        start_date=start_date,
-        days=7,
-        top_n_resorts=min(5, len(resorts)),  # Show top N or all if fewer
-        top_n_pistes=3,  # Show top 3 pistes per resort
-    )
     
-    # Output format
-    output_format = sys.argv[3] if len(sys.argv) > 3 else "text"
-    
-    if output_format == "json":
-        output = format_resort_recommendations_json(recommendations)
-        print(output)
+    if mode == "daily":
+        print("Generating daily resort recommendations (24-hour aggregation)...\n")
+        recommendations = engine.generate_daily_resort_recommendations(
+            skier_profile=skier_profile,
+            start_date=start_date,
+            days=7,
+            top_n_resorts=min(5, len(resorts)),  # Show top N or all if fewer
+            top_n_pistes=3,  # Show top 3 pistes per resort
+        )
+        
+        if output_format == "json":
+            output = format_daily_resort_recommendations_json(recommendations)
+            print(output)
+        else:
+            output = format_daily_resort_recommendations_text(recommendations)
+            print(output)
     else:
-        output = format_resort_recommendations_text(recommendations)
-        print(output)
+        print("Generating resort recommendations by time blocks...\n")
+        recommendations = engine.generate_resort_recommendations(
+            skier_profile=skier_profile,
+            start_date=start_date,
+            days=7,
+            top_n_resorts=min(5, len(resorts)),  # Show top N or all if fewer
+            top_n_pistes=3,  # Show top 3 pistes per resort
+        )
+        
+        if output_format == "json":
+            output = format_resort_recommendations_json(recommendations)
+            print(output)
+        else:
+            output = format_resort_recommendations_text(recommendations)
+            print(output)
     
     return 0
 

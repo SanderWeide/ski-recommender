@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 from src.models import (
     Resort, SkierProfile, WeatherConditions, PisteScore,
-    ResortScore, ResortRecommendation, TimeOfDay
+    ResortScore, ResortRecommendation, TimeOfDay, DailyResortRecommendation
 )
 from src.scoring.piste_scorer import score_piste
 from src.scoring.time_of_day import list_time_blocks, get_representative_hour
@@ -86,6 +86,182 @@ class ResortRecommendationEngine:
                     recommendations.append(resort_rec)
         
         return recommendations
+    
+    def generate_daily_resort_recommendations(
+        self,
+        skier_profile: SkierProfile,
+        start_date: datetime,
+        days: int = 7,
+        top_n_resorts: int = 3,
+        top_n_pistes: int = 3,
+    ) -> List[DailyResortRecommendation]:
+        """Generate resort-level recommendations aggregated over 24-hour periods.
+        
+        Args:
+            skier_profile: Skier preferences and skill level
+            start_date: Start date for recommendations
+            days: Number of days to generate recommendations for
+            top_n_resorts: Number of top resorts to return per day
+            top_n_pistes: Number of top pistes to include for each resort
+        
+        Returns:
+            List of DailyResortRecommendation objects
+        """
+        recommendations = []
+        
+        for day_offset in range(days):
+            date = start_date + timedelta(days=day_offset)
+            
+            daily_rec = self._generate_daily_resort_recommendations(
+                date,
+                skier_profile,
+                top_n_resorts,
+                top_n_pistes,
+            )
+            
+            if daily_rec:
+                recommendations.append(daily_rec)
+        
+        return recommendations
+    
+    def _generate_daily_resort_recommendations(
+        self,
+        date: datetime,
+        skier_profile: SkierProfile,
+        top_n_resorts: int,
+        top_n_pistes: int,
+    ) -> Optional[DailyResortRecommendation]:
+        """Generate resort recommendations for an entire 24-hour period.
+        
+        This aggregates scores across all time blocks (morning, late morning, afternoon)
+        to provide a single daily recommendation.
+        """
+        resort_daily_scores = {}
+        
+        for resort in self.resorts:
+            # Get weather forecast for this resort
+            weather_forecast = self.weather_forecasts.get(resort.id, [])
+            if not weather_forecast:
+                continue
+            
+            # Filter weather for the specific date
+            day_weather = [
+                w for w in weather_forecast
+                if w.timestamp.date() == date.date()
+            ]
+            
+            if not day_weather:
+                continue
+            
+            # Score resort for each time block and aggregate
+            time_block_scores = []
+            all_piste_scores_for_day = []
+            
+            for time_block in list_time_blocks():
+                # Get weather for this time block
+                representative_hour = get_representative_hour(time_block)
+                block_weather = None
+                
+                for w in day_weather:
+                    if w.timestamp.hour == representative_hour:
+                        block_weather = w
+                        break
+                
+                if not block_weather:
+                    continue
+                
+                # Get weather history
+                weather_index = weather_forecast.index(block_weather)
+                recent_weather = weather_forecast[max(0, weather_index - 24):weather_index + 1]
+                
+                # Score all pistes for this time block
+                piste_scores = []
+                for piste in resort.pistes:
+                    score, snow_state, explanation = score_piste(
+                        piste,
+                        block_weather,
+                        time_block,
+                        recent_weather,
+                        skier_profile.skill_level,
+                    )
+                    
+                    if score >= MIN_SCORE_THRESHOLD:
+                        piste_scores.append(PisteScore(
+                            piste=piste,
+                            score=score,
+                            snow_state=snow_state,
+                            explanation=explanation,
+                            timestamp=block_weather.timestamp,
+                            time_of_day=time_block,
+                        ))
+                
+                if piste_scores:
+                    piste_scores.sort(key=lambda x: x.score, reverse=True)
+                    all_piste_scores_for_day.extend(piste_scores)
+                    
+                    # Calculate average score for this time block
+                    avg_score = sum(ps.score for ps in piste_scores[:5]) / min(5, len(piste_scores))
+                    time_block_scores.append(avg_score)
+            
+            # If we have scores for this resort across the day
+            if time_block_scores and all_piste_scores_for_day:
+                # Calculate overall daily score (average across time blocks)
+                daily_score = sum(time_block_scores) / len(time_block_scores)
+                
+                # Get best pistes across entire day (deduplicate by piste id, keep highest score)
+                best_pistes_map = {}
+                for ps in all_piste_scores_for_day:
+                    if ps.piste.id not in best_pistes_map or ps.score > best_pistes_map[ps.piste.id].score:
+                        best_pistes_map[ps.piste.id] = ps
+                
+                best_pistes = sorted(best_pistes_map.values(), key=lambda x: x.score, reverse=True)[:top_n_pistes]
+                
+                # Get a representative weather snapshot (midday)
+                midday_weather = None
+                for w in day_weather:
+                    if w.timestamp.hour == 12:
+                        midday_weather = w
+                        break
+                if not midday_weather and day_weather:
+                    midday_weather = day_weather[len(day_weather) // 2]
+                
+                if midday_weather:
+                    weather_index = weather_forecast.index(midday_weather)
+                    recent_weather = weather_forecast[max(0, weather_index - 24):weather_index + 1]
+                    
+                    snow_summary = self._generate_snow_summary(recent_weather, midday_weather)
+                    explanation = self._generate_resort_explanation(
+                        resort, len(best_pistes_map), best_pistes, midday_weather
+                    )
+                    
+                    resort_daily_scores[resort.id] = ResortScore(
+                        resort=resort,
+                        score=daily_score,
+                        num_suitable_pistes=len(best_pistes_map),
+                        best_piste_scores=best_pistes,
+                        snow_summary=snow_summary,
+                        explanation=explanation,
+                        timestamp=midday_weather.timestamp,
+                        time_of_day=TimeOfDay.LATE_MORNING,  # Representative time
+                    )
+        
+        # Sort resorts by score
+        sorted_resorts = sorted(resort_daily_scores.values(), key=lambda x: x.score, reverse=True)
+        
+        # Take top N
+        top_resorts = sorted_resorts[:top_n_resorts]
+        
+        if not top_resorts:
+            return None
+        
+        # Calculate confidence
+        confidence = self._calculate_confidence(sorted_resorts)
+        
+        return DailyResortRecommendation(
+            date=date,
+            recommendations=top_resorts,
+            confidence=confidence,
+        )
     
     def _generate_time_block_resort_recommendations(
         self,

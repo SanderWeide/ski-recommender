@@ -257,3 +257,75 @@ def test_resort_recommendations_include_piste_details():
             # Piste scores should be sorted by score
             piste_scores = [ps.score for ps in resort_score.best_piste_scores]
             assert piste_scores == sorted(piste_scores, reverse=True)
+
+
+def test_generate_daily_resort_recommendations():
+    """Test generating daily (24-hour) resort recommendations."""
+    resorts = create_test_resorts()
+    weather1 = create_test_weather(days=3)
+    weather2 = create_test_weather(days=3)
+    
+    weather_forecasts = {
+        "test_resort_1": weather1,
+        "test_resort_2": weather2,
+    }
+    
+    engine = ResortRecommendationEngine(resorts, weather_forecasts)
+    
+    profile = SkierProfile(skill_level=SkillLevel.INTERMEDIATE)
+    start_date = TEST_DATE
+    
+    recommendations = engine.generate_daily_resort_recommendations(
+        skier_profile=profile,
+        start_date=start_date,
+        days=3,
+        top_n_resorts=2,
+        top_n_pistes=3,
+    )
+    
+    assert len(recommendations) > 0
+    
+    # Check recommendation structure
+    for rec in recommendations:
+        assert rec.date
+        assert rec.confidence in ["high", "medium", "low"]
+        assert isinstance(rec.recommendations, list)
+        
+        # Check resort scores
+        for resort_score in rec.recommendations:
+            assert resort_score.resort
+            assert 0 <= resort_score.score <= 100
+            assert resort_score.num_suitable_pistes >= 0
+            assert resort_score.snow_summary
+            assert resort_score.explanation
+            assert isinstance(resort_score.best_piste_scores, list)
+
+
+def test_daily_recommendations_ranked_by_score():
+    """Test that daily recommendations are ranked by score."""
+    resorts = create_test_resorts()
+    weather1 = create_test_weather(days=1)
+    weather2 = create_test_weather(days=1)
+    
+    weather_forecasts = {
+        "test_resort_1": weather1,
+        "test_resort_2": weather2,
+    }
+    
+    engine = ResortRecommendationEngine(resorts, weather_forecasts)
+    
+    profile = SkierProfile(skill_level=SkillLevel.INTERMEDIATE)
+    start_date = TEST_DATE
+    
+    recommendations = engine.generate_daily_resort_recommendations(
+        skier_profile=profile,
+        start_date=start_date,
+        days=1,
+        top_n_resorts=2,
+        top_n_pistes=3,
+    )
+    
+    # Check that recommendations are sorted by score
+    for rec in recommendations:
+        scores = [rs.score for rs in rec.recommendations]
+        assert scores == sorted(scores, reverse=True)

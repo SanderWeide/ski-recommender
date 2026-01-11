@@ -141,3 +141,11 @@ class ResortRecommendation:
     time_of_day: TimeOfDay
     recommendations: List[ResortScore]
     confidence: str  # "high", "medium", "low"
+
+
+@dataclass
+class DailyResortRecommendation:
+    """Recommendations for resorts aggregated over a full 24-hour period."""
+    date: datetime
+    recommendations: List[ResortScore]
+    confidence: str  # "high", "medium", "low"
