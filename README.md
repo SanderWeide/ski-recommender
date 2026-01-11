@@ -85,12 +85,28 @@ python main_resort.py all intermediate daily json
 
 ### Live API Data Mode
 
+**Piste-Level with Live Data:**
 ```bash
 # Uses real weather data from Open-Meteo API
 python main_live.py val_thorens intermediate
 
 # JSON output
 python main_live.py zermatt advanced json
+```
+
+**Resort-Level with Live Data:**
+```bash
+# Compare all resorts with live weather data
+python main_resort_live.py all intermediate
+
+# Compare specific resorts with live data (time blocks)
+python main_resort_live.py val_thorens,zermatt intermediate
+
+# Daily mode with live data
+python main_resort_live.py all advanced daily
+
+# JSON output
+python main_resort_live.py all intermediate daily json
 ```
 
 ### Command Line Arguments
@@ -156,11 +172,13 @@ Each piste receives a score (0-100) based on:
   /services         # External API clients (Open-Meteo)
   /snow_model       # Snow surface state modeling
   /scoring          # Piste scoring engine
-  /recommendation   # Main recommendation engine
+  /recommendation   # Main recommendation engine (piste & resort)
   /data             # Resort and piste data
 /tests              # Test suite
-main.py             # CLI with mock data
-main_live.py        # CLI with live API data
+main.py             # Piste CLI with mock data
+main_live.py        # Piste CLI with live API data
+main_resort.py      # Resort comparison CLI with mock data
+main_resort_live.py # Resort comparison CLI with live API data
 ```
 
 ## Testing
